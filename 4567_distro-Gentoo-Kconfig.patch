@@ -6,9 +6,9 @@
  source "Documentation/Kconfig"
 +
 +source "distro/Kconfig"
---- /dev/null	2021-06-04 15:20:42.974876420 -0400
-+++ b/distro/Kconfig	2021-06-04 19:22:20.544037631 -0400
-@@ -0,0 +1,227 @@
+--- /dev/null	2021-06-06 14:01:09.950742356 -0400
++++ b/distro/Kconfig	2021-06-06 17:48:05.912077568 -0400
+@@ -0,0 +1,267 @@
 +menu "Gentoo Linux"
 +
 +config GENTOO_LINUX
@@ -174,6 +174,12 @@
 +
 +	help
 +  Recommended Kernel settings based on the suggestions from the Kernel Self Protection Project
++	See: https://kernsec.org/wiki/index.php/Kernel_Self_Protection_Project/Recommended_Settings
++	Note, there may be additional settings for which the CONFIG_ setting is invisible in menuconfig due 
++	to unmet dependencies. Search for GENTOO_KERNEL_SELF_PROTECTION_{X86_64, ARM64, X86_32, ARM} for 
++	dependency information on your specific architecture.
++	Note 2: Please see the URL above for numeric settings, e.g. CONFIG_DEFAULT_MMAP_MIN_ADDR=65536 
++	for X86_64
 +
 +	depends on GENTOO_LINUX && !HARDENED_USERCOPY_FALLBACK && !HARDENED_USERCOPY_PAGESPAN && !ACPI_CUSTOM_METHOD && !COMPAT_BRK && !DEVKMEM && !PROC_KCORE && !COMPAT_VDSO && !KEXEC && !HIBERNATION && !LEGACY_PTYS && !SECURITY_SELINUX_DISABLE && !IA32_EMULATION && !X86_X32 && !MODIFY_LDT_SYSCALL
 +
@@ -220,18 +226,52 @@
 +	select GCC_PLUGIN_RANDSTRUCT
 +	select GCC_PLUGIN_RANDSTRUCT_PERFORMANCE
 +
++menu "Architecture Specific Self Protection Project Recommendations"
 +
 +config GENTOO_KERNEL_SELF_PROTECTION_X86_64
 +	bool "X86_64 KSPP Settings"
 +
-+	depends on !X86_MSR
-+	default y if GENTOO_KERNEL_SELF_PROTECTION && X86_64
-+
++	depends on !X86_MSR && X86_64
++	default n
++	
 +	select RANDOMIZE_BASE
 +	select RANDOMIZE_MEMORY
 +	select LEGACY_VSYSCALL_NONE
++ select PAGE_TABLE_ISOLATION
++
++
++config GENTOO_KERNEL_SELF_PROTECTION_ARM64
++	bool "ARM64 KSPP Settings"
++
++	depends on ARM64
++	default n
++
++	select RANDOMIZE_BASE
++	select ARM64_SW_TTBR0_PAN
++	select CONFIG_UNMAP_KERNEL_AT_EL0
++
++config GENTOO_KERNEL_SELF_PROTECTION_X86_32
++	bool "X86_32 KSPP Settings"
++
++	depends on !X86_MSR && !MODIFY_LDT_SYSCALL && !M486 && X86_32
++	default n
++
++	select HIGHMEM64G
++	select X86_PAE
++	select RANDOMIZE_BASE
 +	select PAGE_TABLE_ISOLATION
 +
++config GENTOO_KERNEL_SELF_PROTECTION_ARM
++	bool "ARM KSPP Settings"
++
++	depends on !OABI_COMPAT && ARM
++	default n
++
++	select VMSPLIT_3G
++	select STRICT_MEMORY_RWX
++	select CPU_SW_DOMAIN_PAN
++
++endmenu
 +
 +endmenu
 +
